@@ -382,12 +382,13 @@
         @media (max-width: 640px) {
             #topBar {
                 top: 8px; left: 8px; right: 8px;
-                padding: 8px 12px;
-                flex-wrap: wrap; gap: 8px;
-                border-radius: 12px;
+                padding: 6px 10px;
+                flex-wrap: nowrap; gap: 8px;
+                border-radius: 10px;
+                align-items: flex-start;
             }
             #info {
-                flex: 1 1 100%;
+                flex: 1 1 auto;
                 font-size: 11px;
                 min-width: 0;
             }
@@ -396,10 +397,10 @@
             #info .stats { font-size: 9px; }
             #topRight {
                 flex: 0 0 auto;
-                gap: 6px;
+                gap: 4px;
                 margin-left: auto;
             }
-            .btn { width: 36px; height: 36px; font-size: 14px; border-radius: 8px; }
+            .btn { width: 28px; height: 28px; font-size: 12px; border-radius: 6px; }
             .btn.mobile-only { display: flex; }
             #resolution { display: none; }
             #controls { display: none; }
