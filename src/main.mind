@@ -1,0 +1,412 @@
+// main.mind - Fractal Voyager Entry Point
+//
+// GPU-accelerated fractal visualization using MIND with WebGPU runtime.
+// Renders Mandelbrot, Julia, Burning Ship, and Tricorn fractals with
+// audio-reactive coloring and smooth interactive navigation.
+//
+// All computation is expressed as tensor operations, enabling automatic
+// parallelization on GPU via MIND's MLIR->WGSL compilation pipeline.
+//
+// Author: STARGA Inc. <noreply@star.ga>
+// License: MIT
+// Specification reference: spec/v1.0/language.md
+
+import tensor::zeros;
+import tensor::ones;
+import math::pow;
+import math::max;
+import math::min;
+import math::log;
+import io::print;
+
+// Import fractal computation modules
+import fractal::compute_fractal_grid;
+import fractal::make_coordinate_grid;
+import fractal::adaptive_iterations;
+import color::colorize_iterations;
+import color::get_palette_color;
+
+// =============================================================================
+// Configuration Constants
+// =============================================================================
+
+fn default_width() -> i32 { 1280 }
+fn default_height() -> i32 { 720 }
+fn base_iterations() -> i32 { 100 }
+fn max_iterations() -> i32 { 2000 }
+fn zoom_smooth_factor() -> f32 { 0.1 }
+fn pan_smooth_factor() -> f32 { 0.15 }
+
+// =============================================================================
+// Application State (as Tensors)
+// =============================================================================
+
+// View state packed as tensor: [center_x, center_y, target_center_x, target_center_y, zoom, target_zoom]
+fn view_state_default() -> Tensor<f32, [6]> {
+    [-0.5, 0.0, -0.5, 0.0, 1.0, 1.0]
+}
+
+// Audio state: [intensity, low, mid, high]
+fn audio_state_default() -> Tensor<f32, [4]> {
+    zeros([4])
+}
+
+// Render config: [width, height, fractal_type, color_scheme, time, audio_enabled]
+fn render_config_default() -> Tensor<f32, [6]> {
+    [1280.0, 720.0, 0.0, 0.0, 0.0, 0.0]
+}
+
+// Julia constant: [real, imag]
+fn julia_c_default() -> Tensor<f32, [2]> {
+    [-0.7, 0.27015]  // Classic Julia set constant
+}
+
+// =============================================================================
+// State Accessors
+// =============================================================================
+
+fn get_center(view: Tensor<f32, [6]>) -> Tensor<f32, [2]> {
+    [view[0], view[1]]
+}
+
+fn get_target_center(view: Tensor<f32, [6]>) -> Tensor<f32, [2]> {
+    [view[2], view[3]]
+}
+
+fn get_zoom(view: Tensor<f32, [6]>) -> f32 {
+    view[4]
+}
+
+fn get_target_zoom(view: Tensor<f32, [6]>) -> f32 {
+    view[5]
+}
+
+// =============================================================================
+// View Updates
+// =============================================================================
+
+// Smooth linear interpolation
+fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    a + (b - a) * t
+}
+
+// Update view with smooth interpolation toward targets
+fn view_update(view: Tensor<f32, [6]>, dt: f32) -> Tensor<f32, [6]> {
+    let smooth_pan = 1.0 - pow(pan_smooth_factor(), dt * 60.0);
+    let smooth_zoom = 1.0 - pow(zoom_smooth_factor(), dt * 60.0);
+
+    let center_x = lerp(view[0], view[2], smooth_pan);
+    let center_y = lerp(view[1], view[3], smooth_pan);
+    let zoom = lerp(view[4], view[5], smooth_zoom);
+
+    // Keep targets unchanged
+    [center_x, center_y, view[2], view[3], zoom, view[5]]
+}
+
+// Zoom at specific screen point (preserves point under cursor)
+fn view_zoom_at(
+    view: Tensor<f32, [6]>,
+    screen_x: f32,
+    screen_y: f32,
+    factor: f32,
+    width: f32,
+    height: f32
+) -> Tensor<f32, [6]> {
+    let center = get_center(view);
+    let zoom = get_zoom(view);
+    let target_zoom = get_target_zoom(view);
+
+    // Calculate new zoom
+    let new_zoom = max(0.5, target_zoom * factor);
+
+    // Map screen point to complex plane at current zoom
+    let aspect = width / height;
+    let scale_old = 3.5 / zoom;
+    let u = screen_x / width - 0.5;
+    let v = screen_y / height - 0.5;
+    let mouse_real = u * scale_old * aspect + center[0];
+    let mouse_imag = v * scale_old + center[1];
+
+    // Map same screen point at new zoom
+    let scale_new = 3.5 / new_zoom;
+    let new_center_real = u * scale_new * aspect + center[0];
+    let new_center_imag = v * scale_new + center[1];
+
+    // Adjust target center to keep mouse position fixed
+    let target_center = get_target_center(view);
+    let adj_real = target_center[0] + (mouse_real - new_center_real);
+    let adj_imag = target_center[1] + (mouse_imag - new_center_imag);
+
+    [view[0], view[1], adj_real, adj_imag, view[4], new_zoom]
+}
+
+// Pan view by screen pixel delta
+fn view_pan(
+    view: Tensor<f32, [6]>,
+    dx: f32,
+    dy: f32,
+    width: f32,
+    height: f32
+) -> Tensor<f32, [6]> {
+    let zoom = get_zoom(view);
+    let target_center = get_target_center(view);
+    let aspect = width / height;
+    let scale = 3.5 / zoom;
+
+    // Convert screen delta to complex plane delta
+    let c_dx = -dx / width * scale * aspect;
+    let c_dy = -dy / height * scale;
+
+    let new_target_x = target_center[0] + c_dx;
+    let new_target_y = target_center[1] + c_dy;
+
+    [view[0], view[1], new_target_x, new_target_y, view[4], view[5]]
+}
+
+// Reset view to default
+fn view_reset() -> Tensor<f32, [6]> {
+    view_state_default()
+}
+
+// =============================================================================
+// Rendering Pipeline
+// =============================================================================
+
+// Main render function: compute fractal and colorize
+// Returns: Tensor<f32, [H, W, 4]> - RGBA image
+fn render_frame(
+    view: Tensor<f32, [6]>,
+    config: Tensor<f32, [6]>,
+    julia_c: Tensor<f32, [2]>,
+    audio: Tensor<f32, [4]>
+) -> Tensor<f32, [H, W, 4]> {
+    let width = cast(config[0], i32);
+    let height = cast(config[1], i32);
+    let fractal_type = cast(config[2], i32);
+    let color_scheme = cast(config[3], i32);
+    let time = config[4];
+    let audio_enabled = config[5] > 0.5;
+
+    let center = get_center(view);
+    let zoom = get_zoom(view);
+
+    // Calculate adaptive iterations based on zoom
+    let max_iter = adaptive_iterations(zoom, base_iterations(), max_iterations());
+
+    // Generate coordinate grid for all pixels
+    let c_grid = make_coordinate_grid(width, height, center, zoom);
+
+    // Compute fractal iterations for all pixels (GPU-parallel)
+    let iterations = compute_fractal_grid(fractal_type, c_grid, julia_c, max_iter);
+
+    // Get audio intensity for reactive colors
+    let audio_intensity = select(audio_enabled, audio[0], 0.0);
+
+    // Apply color palette to iteration counts
+    let rgb = colorize_iterations(
+        iterations,
+        cast(max_iter, f32),
+        color_scheme,
+        time,
+        audio_intensity
+    );
+
+    // Add alpha channel (fully opaque)
+    let alpha = ones([H, W]);
+    stack([rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2], alpha], axis=2)
+}
+
+// =============================================================================
+// GPU Kernel Entry Point
+// =============================================================================
+
+// Compute kernel for parallel pixel rendering
+// Each thread computes one pixel
+// Maps to WebGPU compute shader via MIND runtime
+#[kernel(workgroup = [16, 16, 1])]
+fn render_kernel(
+    // Input uniforms
+    view: Tensor<f32, [6]>,
+    config: Tensor<f32, [6]>,
+    julia_c: Tensor<f32, [2]>,
+    audio: Tensor<f32, [4]>,
+    // Output texture
+    output: Tensor<f32, [H, W, 4]>
+) {
+    // Get global thread ID
+    let gid = global_invocation_id();
+    let x = gid[0];
+    let y = gid[1];
+
+    let width = cast(config[0], i32);
+    let height = cast(config[1], i32);
+
+    // Bounds check
+    if x >= width || y >= height {
+        return;
+    }
+
+    let fractal_type = cast(config[2], i32);
+    let color_scheme = cast(config[3], i32);
+    let time = config[4];
+    let audio_enabled = config[5] > 0.5;
+
+    let center = get_center(view);
+    let zoom = get_zoom(view);
+
+    // Adaptive iterations
+    let max_iter = adaptive_iterations(zoom, base_iterations(), max_iterations());
+
+    // Map this pixel to complex plane
+    let aspect = cast(width, f32) / cast(height, f32);
+    let scale = 3.5 / zoom;
+    let u = cast(x, f32) / cast(width, f32) - 0.5;
+    let v = cast(y, f32) / cast(height, f32) - 0.5;
+    let c = [u * scale * aspect + center[0], v * scale + center[1]];
+
+    // Compute fractal for this pixel
+    let z_real = 0.0;
+    let z_imag = 0.0;
+    let iter_count = 0.0;
+    let escaped = false;
+
+    // Mandelbrot iteration (unrolled for GPU efficiency)
+    for i in 0..max_iter {
+        let z_sq = z_real * z_real + z_imag * z_imag;
+        if z_sq > 4.0 {
+            escaped = true;
+            break;
+        }
+
+        let temp = z_real * z_real - z_imag * z_imag + c[0];
+        z_imag = 2.0 * z_real * z_imag + c[1];
+        z_real = temp;
+        iter_count = iter_count + 1.0;
+    }
+
+    // Smooth iteration count
+    let smooth_iter = select(escaped,
+        iter_count + 1.0 - log(log(sqrt(z_real * z_real + z_imag * z_imag))) / log(2.0),
+        cast(max_iter, f32));
+
+    // Get color
+    let audio_intensity = select(audio_enabled, audio[0], 0.0);
+    let t = smooth_iter / cast(max_iter, f32);
+    let color = select(smooth_iter >= cast(max_iter, f32),
+        [0.0, 0.0, 0.0],
+        get_palette_color(color_scheme, t, smooth_iter, time, audio_intensity));
+
+    // Write to output
+    output[y, x, 0] = color[0];
+    output[y, x, 1] = color[1];
+    output[y, x, 2] = color[2];
+    output[y, x, 3] = 1.0;
+}
+
+// =============================================================================
+// Application Main
+// =============================================================================
+
+// Main entry point
+fn main() !io {
+    print("Fractal Voyager - MIND WebGPU Visualization");
+    print("Author: STARGA Inc.");
+    print("");
+
+    // Initialize state
+    let view = view_state_default();
+    let config = render_config_default();
+    let julia_c = julia_c_default();
+    let audio = audio_state_default();
+
+    // Runtime handles event loop and GPU dispatch
+    // This is lowered to WebGPU compute shader invocations
+    runtime_main(view, config, julia_c, audio, render_kernel);
+}
+
+// =============================================================================
+// Event Handlers (Called by Runtime)
+// =============================================================================
+
+// Handle frame update
+fn on_update(
+    view: Tensor<f32, [6]>,
+    config: Tensor<f32, [6]>,
+    dt: f32
+) -> (Tensor<f32, [6]>, Tensor<f32, [6]>) {
+    // Update time
+    let new_config = [config[0], config[1], config[2], config[3], config[4] + dt, config[5]];
+
+    // Smooth view animation
+    let new_view = view_update(view, dt);
+
+    (new_view, new_config)
+}
+
+// Handle mouse wheel zoom
+fn on_mouse_wheel(
+    view: Tensor<f32, [6]>,
+    config: Tensor<f32, [6]>,
+    x: f32,
+    y: f32,
+    delta: f32
+) -> Tensor<f32, [6]> {
+    let factor = select(delta > 0.0, 1.1, 0.9);
+    view_zoom_at(view, x, y, factor, config[0], config[1])
+}
+
+// Handle mouse drag pan
+fn on_mouse_drag(
+    view: Tensor<f32, [6]>,
+    config: Tensor<f32, [6]>,
+    dx: f32,
+    dy: f32
+) -> Tensor<f32, [6]> {
+    view_pan(view, dx, dy, config[0], config[1])
+}
+
+// Handle key press
+fn on_key_press(
+    config: Tensor<f32, [6]>,
+    key: i32
+) -> Tensor<f32, [6]> {
+    // Key codes: 1-4 for fractal types, C for color, A for audio, R for reset
+    let fractal_type = config[2];
+    let color_scheme = config[3];
+    let audio_enabled = config[5];
+
+    let new_fractal = select(key == 49, 0.0,  // '1' -> Mandelbrot
+                     select(key == 50, 1.0,   // '2' -> Julia
+                     select(key == 51, 2.0,   // '3' -> Burning Ship
+                     select(key == 52, 3.0,   // '4' -> Tricorn
+                     fractal_type))));
+
+    let new_color = select(key == 67,  // 'C' -> cycle colors
+                     (color_scheme + 1.0) % 8.0,
+                     color_scheme);
+
+    let new_audio = select(key == 65,  // 'A' -> toggle audio
+                    1.0 - audio_enabled,
+                    audio_enabled);
+
+    [config[0], config[1], new_fractal, new_color, config[4], new_audio]
+}
+
+// Handle audio data from microphone
+fn on_audio_data(
+    intensity: f32,
+    low: f32,
+    mid: f32,
+    high: f32
+) -> Tensor<f32, [4]> {
+    [intensity, low, mid, high]
+}
+
+// Handle window resize
+fn on_resize(
+    config: Tensor<f32, [6]>,
+    width: i32,
+    height: i32
+) -> Tensor<f32, [6]> {
+    [cast(width, f32), cast(height, f32), config[2], config[3], config[4], config[5]]
+}
