@@ -120,6 +120,7 @@
             transform: scale(1.05);
         }
         .btn:active { transform: scale(0.95); }
+        .btn.mobile-only { display: none; }
         .btn.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-color: transparent;
@@ -398,14 +399,10 @@
                 gap: 6px;
                 margin-left: auto;
             }
-            .btn { width: 32px; height: 32px; font-size: 13px; border-radius: 8px; }
+            .btn { width: 36px; height: 36px; font-size: 14px; border-radius: 8px; }
+            .btn.mobile-only { display: flex; }
             #resolution { display: none; }
-            #controls {
-                bottom: 8px; left: 50%; right: auto;
-                transform: translateX(-50%);
-                font-size: 10px; padding: 6px 12px;
-                border-radius: 8px;
-            }
+            #controls { display: none; }
             #startBtn { padding: 18px 36px; border-radius: 50px; }
             #startBtn .btn-text { font-size: 16px; }
             #startBtn .btn-icon { width: 28px; height: 28px; font-size: 14px; }
@@ -443,6 +440,8 @@
     <div id="topBar" class="glass">
         <div id="info"></div>
         <div id="topRight">
+            <button id="fractalBtn" class="btn mobile-only" title="Change Fractal">🌀</button>
+            <button id="colorBtn" class="btn mobile-only" title="Change Color">🎨</button>
             <button id="muteBtn" class="btn active" title="Toggle Sound">🔊</button>
             <button id="autoBtn" class="btn" title="Toggle Auto-Zoom">⚡</button>
             <select id="resolution">
@@ -1498,6 +1497,17 @@
             } else {
                 btn.classList.remove('active');
             }
+        });
+
+        // Fractal button handler (mobile)
+        document.getElementById('fractalBtn').addEventListener('click', () => {
+            state.fractalType = (state.fractalType + 1) % 4;
+            resetView();
+        });
+
+        // Color button handler (mobile)
+        document.getElementById('colorBtn').addEventListener('click', () => {
+            state.colorScheme = (state.colorScheme + 1) % 8;
         });
 
         document.body.addEventListener('dragover', e => e.preventDefault());
