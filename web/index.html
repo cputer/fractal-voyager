@@ -1367,9 +1367,10 @@
             const zoomStr = state.zoom >= 1e9 ? state.zoom.toExponential(2) : state.zoom.toFixed(1);
             const mpps = (pixelsPerSecond / 1e6).toFixed(1);
             const mp = (totalPixels / 1e6).toFixed(2);
+            const resLabel = state.resolution === 'auto' ? 'Auto DPI' : state.resolution;
 
             info.innerHTML = `
-                <div class="title">Fractal Voyager <span class="api ${apiClass}">${apiName}</span></div>
+                <div class="title">Fractal Voyager <span class="api ${apiClass}">${apiName}</span> <span class="api ${apiClass}">${resLabel}</span></div>
                 <div class="stats">
                     <span class="highlight">${FRACTALS[state.fractalType]}</span> <span class="dim">|</span>
                     ${COLORS[state.colorScheme]} <span class="dim">|</span>
