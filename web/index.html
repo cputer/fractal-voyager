@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <title>Fractal Voyager - GPU Compute</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <title>Fractal Voyager - MindLang GPU Demo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow: hidden; font-family: 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif; }
@@ -356,6 +357,70 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 11px;
+        }
+
+        /* Tablet styles */
+        @media (max-width: 1024px) {
+            #info { top: 12px; left: 12px; padding: 10px 16px; font-size: 14px; }
+            #info .title { font-size: 16px; margin-bottom: 4px; }
+            #info .stats { font-size: 11px; }
+            #controls { bottom: 12px; left: 12px; font-size: 11px; padding: 8px 12px; }
+            #gpuInfo { display: none; }
+            #topRight { top: 12px; right: 12px; gap: 8px; }
+            .btn { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
+            #resolution { padding: 10px 40px 10px 14px; font-size: 12px; min-width: 140px; }
+            .browser-instructions { padding: 16px; }
+            .browser-item { padding: 10px 12px; }
+        }
+
+        /* Mobile styles */
+        @media (max-width: 640px) {
+            #info {
+                top: 8px; left: 8px; right: 8px;
+                padding: 8px 12px; font-size: 12px;
+                border-radius: 10px;
+            }
+            #info .title { font-size: 14px; margin-bottom: 2px; }
+            #info .api { padding: 2px 6px; font-size: 10px; margin-left: 4px; }
+            #info .stats { font-size: 10px; }
+            #controls {
+                bottom: 8px; left: 8px; right: 8px;
+                font-size: 10px; padding: 6px 10px;
+                border-radius: 8px; text-align: center;
+            }
+            #topRight { top: auto; bottom: 60px; right: 8px; flex-direction: column; gap: 6px; }
+            .btn { width: 36px; height: 36px; font-size: 14px; border-radius: 8px; }
+            #resolution {
+                padding: 8px 32px 8px 10px; font-size: 11px;
+                min-width: auto; width: 100%; border-radius: 8px;
+                background-position: right 10px center;
+            }
+            #startBtn { padding: 18px 36px; border-radius: 50px; }
+            #startBtn .btn-text { font-size: 16px; }
+            #startBtn .btn-icon { width: 28px; height: 28px; font-size: 14px; }
+            .start-glow { width: 250px; height: 100px; }
+            .api-badge { font-size: 11px; padding: 6px 14px; }
+            .instruction-text { font-size: 13px; }
+            .instruction-controls { font-size: 11px; gap: 8px 12px; }
+            kbd { font-size: 10px; padding: 1px 5px; }
+            .browser-help { max-width: 100%; padding: 0 16px; }
+            .browser-help-toggle { font-size: 11px; padding: 8px 14px; }
+            .browser-instructions { padding: 12px; border-radius: 12px; }
+            .browser-instructions h4 { font-size: 12px; }
+            .browser-item { padding: 8px 10px; gap: 8px; }
+            .browser-icon { font-size: 16px; width: 22px; }
+            .browser-name { font-size: 11px; }
+            .browser-steps { font-size: 10px; }
+            .browser-steps code { font-size: 9px; padding: 1px 4px; }
+        }
+
+        /* Very small screens */
+        @media (max-width: 380px) {
+            #info .title { font-size: 12px; }
+            #info .stats { font-size: 9px; }
+            #startBtn { padding: 14px 28px; }
+            #startBtn .btn-text { font-size: 14px; }
+            .instruction-controls { display: none; }
         }
     </style>
 </head>
