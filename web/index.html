@@ -43,6 +43,7 @@
             position: fixed; bottom: 20px; left: 20px; color: rgba(255,255,255,0.8);
             font-size: 13px; font-weight: 400; letter-spacing: 0.3px;
             padding: 12px 18px; border-radius: 12px;
+            white-space: nowrap;
         }
 
         #gpuInfo {
@@ -408,9 +409,10 @@
                 background-size: 12px;
             }
             #controls {
-                bottom: 8px; left: 8px; right: 8px;
-                font-size: 9px; padding: 6px 10px;
-                border-radius: 8px; text-align: center;
+                bottom: 8px; left: 50%; right: auto;
+                transform: translateX(-50%);
+                font-size: 10px; padding: 6px 12px;
+                border-radius: 8px;
             }
             #startBtn { padding: 18px 36px; border-radius: 50px; }
             #startBtn .btn-text { font-size: 16px; }
@@ -475,8 +477,7 @@
         </div>
     </div>
     <div id="controls" class="glass">
-        <span style="opacity:0.6">Keys:</span> 1-4 Fractal • C Color • Z Auto • R Reset
-        <span style="opacity:0.6; margin-left:10px">Mouse:</span> Scroll Zoom • Drag Pan
+        1-4 Fractal • C Color • Z Auto • R Reset • Scroll Zoom • Drag Pan
     </div>
     <div id="gpuInfo" class="glass"></div>
 
