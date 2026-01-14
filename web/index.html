@@ -17,20 +17,24 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.6);
         }
 
-        #info {
-            position: fixed; top: 20px; left: 20px; color: #fff;
-            font-size: 16px; font-weight: 500; letter-spacing: 0.3px;
-            padding: 14px 22px; border-radius: 16px;
-            line-height: 1.6;
+        #topBar {
+            position: fixed; top: 12px; left: 12px; right: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 16px; border-radius: 14px; color: #fff;
+            z-index: 100;
         }
-        #info .title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+        #info {
+            font-size: 14px; font-weight: 500; letter-spacing: 0.3px;
+            line-height: 1.5; flex: 1;
+        }
+        #info .title { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
         #info .api {
-            display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px;
-            font-weight: 600; letter-spacing: 0.5px; margin-left: 8px;
+            display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 10px;
+            font-weight: 600; letter-spacing: 0.5px; margin-left: 6px; vertical-align: middle;
         }
         #info .webgpu { background: linear-gradient(135deg, #00d4ff, #7b2ff7); }
         #info .webgl2 { background: linear-gradient(135deg, #ff6b35, #f7931e); }
-        #info .stats { font-size: 13px; opacity: 0.9; font-family: 'SF Mono', 'Fira Code', monospace; }
+        #info .stats { font-size: 11px; opacity: 0.9; font-family: 'SF Mono', 'Fira Code', monospace; }
         #info .highlight { color: #7af; }
         #info .perf { color: #5f5; }
         #info .dim { opacity: 0.6; }
@@ -50,8 +54,8 @@
         #gpuInfo .label { opacity: 0.5; }
 
         #topRight {
-            position: fixed; top: 20px; right: 20px;
-            display: flex; gap: 12px; align-items: center;
+            display: flex; gap: 8px; align-items: center;
+            flex-shrink: 0;
         }
 
         #resolution {
@@ -103,10 +107,10 @@
         }
 
         .btn {
-            width: 48px; height: 48px; border-radius: 14px;
+            width: 36px; height: 36px; border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.15);
             background: linear-gradient(135deg, #2a2a3a 0%, #1a1a24 100%);
-            color: #fff; font-size: 20px;
+            color: #fff; font-size: 16px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: all 0.2s ease;
         }
@@ -361,39 +365,52 @@
 
         /* Tablet styles */
         @media (max-width: 1024px) {
-            #info { top: 12px; left: 12px; padding: 10px 16px; font-size: 14px; }
-            #info .title { font-size: 16px; margin-bottom: 4px; }
-            #info .stats { font-size: 11px; }
-            #controls { bottom: 12px; left: 12px; font-size: 11px; padding: 8px 12px; }
+            #topBar { top: 10px; left: 10px; right: 10px; padding: 8px 14px; }
+            #info { font-size: 13px; }
+            #info .title { font-size: 15px; }
+            #info .stats { font-size: 10px; }
+            #controls { bottom: 10px; left: 10px; font-size: 11px; padding: 8px 12px; }
             #gpuInfo { display: none; }
-            #topRight { top: 12px; right: 12px; gap: 8px; }
-            .btn { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
-            #resolution { padding: 10px 40px 10px 14px; font-size: 12px; min-width: 140px; }
+            .btn { width: 34px; height: 34px; font-size: 15px; }
+            #resolution { padding: 8px 36px 8px 12px; font-size: 12px; min-width: 130px; }
             .browser-instructions { padding: 16px; }
             .browser-item { padding: 10px 12px; }
         }
 
         /* Mobile styles */
         @media (max-width: 640px) {
-            #info {
+            #topBar {
                 top: 8px; left: 8px; right: 8px;
-                padding: 8px 12px; font-size: 12px;
-                border-radius: 10px;
+                padding: 8px 12px;
+                flex-wrap: wrap; gap: 8px;
+                border-radius: 12px;
             }
-            #info .title { font-size: 14px; margin-bottom: 2px; }
-            #info .api { padding: 2px 6px; font-size: 10px; margin-left: 4px; }
-            #info .stats { font-size: 10px; }
+            #info {
+                flex: 1 1 100%;
+                font-size: 11px;
+                min-width: 0;
+            }
+            #info .title { font-size: 13px; margin-bottom: 2px; }
+            #info .api { padding: 2px 5px; font-size: 9px; margin-left: 3px; }
+            #info .stats { font-size: 9px; }
+            #topRight {
+                flex: 0 0 auto;
+                gap: 6px;
+                margin-left: auto;
+            }
+            .btn { width: 32px; height: 32px; font-size: 13px; border-radius: 8px; }
+            #resolution {
+                padding: 6px 28px 6px 10px;
+                font-size: 11px;
+                min-width: 100px;
+                border-radius: 8px;
+                background-position: right 10px center;
+                background-size: 12px;
+            }
             #controls {
                 bottom: 8px; left: 8px; right: 8px;
-                font-size: 10px; padding: 6px 10px;
+                font-size: 9px; padding: 6px 10px;
                 border-radius: 8px; text-align: center;
-            }
-            #topRight { top: auto; bottom: 60px; right: 8px; flex-direction: column; gap: 6px; }
-            .btn { width: 36px; height: 36px; font-size: 14px; border-radius: 8px; }
-            #resolution {
-                padding: 8px 32px 8px 10px; font-size: 11px;
-                min-width: auto; width: 100%; border-radius: 8px;
-                background-position: right 10px center;
             }
             #startBtn { padding: 18px 36px; border-radius: 50px; }
             #startBtn .btn-text { font-size: 16px; }
@@ -401,11 +418,11 @@
             .start-glow { width: 250px; height: 100px; }
             .api-badge { font-size: 11px; padding: 6px 14px; }
             .instruction-text { font-size: 13px; }
-            .instruction-controls { font-size: 11px; gap: 8px 12px; }
+            .instruction-controls { display: none; }
             kbd { font-size: 10px; padding: 1px 5px; }
             .browser-help { max-width: 100%; padding: 0 16px; }
             .browser-help-toggle { font-size: 11px; padding: 8px 14px; }
-            .browser-instructions { padding: 12px; border-radius: 12px; }
+            .browser-instructions { padding: 12px; border-radius: 12px; max-height: 50vh; overflow-y: auto; }
             .browser-instructions h4 { font-size: 12px; }
             .browser-item { padding: 8px 10px; gap: 8px; }
             .browser-icon { font-size: 16px; width: 22px; }
@@ -416,8 +433,11 @@
 
         /* Very small screens */
         @media (max-width: 380px) {
-            #info .title { font-size: 12px; }
-            #info .stats { font-size: 9px; }
+            #topBar { padding: 6px 10px; gap: 6px; }
+            #info .title { font-size: 11px; }
+            #info .stats { font-size: 8px; }
+            .btn { width: 28px; height: 28px; font-size: 12px; }
+            #resolution { display: none; }
             #startBtn { padding: 14px 28px; }
             #startBtn .btn-text { font-size: 14px; }
             .instruction-controls { display: none; }
@@ -426,38 +446,39 @@
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    <div id="info" class="glass"></div>
+    <div id="topBar" class="glass">
+        <div id="info"></div>
+        <div id="topRight">
+            <button id="muteBtn" class="btn active" title="Toggle Sound">🔊</button>
+            <button id="autoBtn" class="btn" title="Toggle Auto-Zoom">⚡</button>
+            <select id="resolution">
+                <optgroup label="Auto">
+                    <option value="auto" selected>Auto (Device DPI)</option>
+                </optgroup>
+                <optgroup label="16:9 Standard">
+                    <option value="1280x720">720p HD</option>
+                    <option value="1920x1080">1080p FHD</option>
+                    <option value="2560x1440">1440p QHD</option>
+                    <option value="3840x2160">4K UHD</option>
+                    <option value="5120x2880">5K</option>
+                    <option value="7680x4320">8K UHD</option>
+                </optgroup>
+                <optgroup label="Ultrawide">
+                    <option value="3440x1440">UWQHD</option>
+                    <option value="5120x2160">UW5K</option>
+                </optgroup>
+                <optgroup label="Apple">
+                    <option value="3456x2234">MacBook Pro 16"</option>
+                    <option value="6016x3384">Pro Display XDR</option>
+                </optgroup>
+            </select>
+        </div>
+    </div>
     <div id="controls" class="glass">
         <span style="opacity:0.6">Keys:</span> 1-4 Fractal • C Color • Z Auto • R Reset
         <span style="opacity:0.6; margin-left:10px">Mouse:</span> Scroll Zoom • Drag Pan
     </div>
     <div id="gpuInfo" class="glass"></div>
-
-    <div id="topRight">
-        <button id="muteBtn" class="btn active" title="Toggle Sound">🔊</button>
-        <button id="autoBtn" class="btn" title="Toggle Auto-Zoom">⚡</button>
-        <select id="resolution">
-        <optgroup label="Auto">
-            <option value="auto" selected>Auto (Device DPI)</option>
-        </optgroup>
-        <optgroup label="16:9 Standard">
-            <option value="1280x720">720p HD</option>
-            <option value="1920x1080">1080p FHD</option>
-            <option value="2560x1440">1440p QHD</option>
-            <option value="3840x2160">4K UHD</option>
-            <option value="5120x2880">5K</option>
-            <option value="7680x4320">8K UHD</option>
-        </optgroup>
-        <optgroup label="Ultrawide">
-            <option value="3440x1440">UWQHD</option>
-            <option value="5120x2160">UW5K</option>
-        </optgroup>
-        <optgroup label="Apple">
-            <option value="3456x2234">MacBook Pro 16"</option>
-            <option value="6016x3384">Pro Display XDR</option>
-        </optgroup>
-    </select>
-    </div>
 
     <input type="file" id="audioFile" accept="audio/*" style="display:none">
 
