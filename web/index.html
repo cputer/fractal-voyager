@@ -160,6 +160,15 @@
         .api-switcher button.active.webgl2 {
             background: linear-gradient(135deg, #ff6b35, #f7931e);
         }
+        .api-switcher button.unavailable {
+            opacity: 0.3;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+        .api-switcher button.unavailable:hover {
+            background: transparent;
+            color: rgba(255,255,255,0.3);
+        }
 
         #startHint {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -517,6 +526,13 @@
         <div class="start-container">
             <div class="start-glow"></div>
             <div id="apiBadge" class="api-badge">Detecting GPU...</div>
+            <div class="start-api-selector" id="startApiSelector" style="z-index:1; margin-bottom: 20px;">
+                <div style="color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 8px; text-align: center;">Select Rendering API</div>
+                <div class="api-switcher" style="transform: scale(1.3); transform-origin: center;">
+                    <button id="startWebgpuBtn">WebGPU</button>
+                    <button id="startWebgl2Btn">WebGL2</button>
+                </div>
+            </div>
             <button id="startBtn">
                 <span class="btn-text">Click here to start</span>
                 <span class="btn-icon">▶</span>
@@ -1153,6 +1169,8 @@
         const apiBadge = document.getElementById('apiBadge');
 
         let renderer = null; // 'webgpu' or 'webgl2'
+        let selectedApi = null; // User's preferred API
+        let webgpuAvailable = false; // Whether WebGPU is available
         let gpuDevice, gpuContext, gpuRenderPipeline, gpuUniformBuffer, gpuBindGroup, canvasFormat;
         let gl, glProgram, glUniforms = {};
         let gpuName = 'Unknown GPU';
@@ -1609,20 +1627,100 @@
             instructions.classList.toggle('visible');
         });
 
-        // ============ INIT ============
-        async function init() {
-            // Check URL for force mode: ?renderer=webgl2 or ?renderer=webgpu
-            // Default depends on browser: Chrome uses WebGPU, Firefox uses WebGL2
-            const urlParams = new URLSearchParams(window.location.search);
-            const forceRenderer = urlParams.get('renderer');
+        // ============ API DETECTION ============
+        async function detectApis() {
+            // Check WebGPU availability
+            if (navigator.gpu) {
+                try {
+                    const adapter = await navigator.gpu.requestAdapter();
+                    webgpuAvailable = !!adapter;
+                } catch (e) {
+                    webgpuAvailable = false;
+                }
+            }
+
+            // Update start screen buttons
+            const startWebgpuBtn = document.getElementById('startWebgpuBtn');
+            const startWebgl2Btn = document.getElementById('startWebgl2Btn');
+            const webgpuBtn = document.getElementById('webgpuBtn');
+            const webgl2Btn = document.getElementById('webgl2Btn');
 
             // Detect browser - Firefox WebGPU is 20x slower than WebGL2
             const isFirefox = navigator.userAgent.includes('Firefox');
             const isChrome = navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Edge');
 
+            // Check URL for force mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceRenderer = urlParams.get('renderer');
+
+            // Set default selection based on availability and browser
+            if (forceRenderer === 'webgpu' && webgpuAvailable) {
+                selectedApi = 'webgpu';
+            } else if (forceRenderer === 'webgl2') {
+                selectedApi = 'webgl2';
+            } else if (webgpuAvailable && isChrome) {
+                selectedApi = 'webgpu';
+            } else {
+                selectedApi = 'webgl2';
+            }
+
+            // Update UI for WebGPU availability
+            if (!webgpuAvailable) {
+                startWebgpuBtn.classList.add('unavailable');
+                startWebgpuBtn.title = 'WebGPU not available in this browser';
+                webgpuBtn.classList.add('unavailable');
+                webgpuBtn.title = 'WebGPU not available';
+            }
+
+            // Set initial active state
+            updateApiSelection(selectedApi);
+
+            // Update badge
+            if (webgpuAvailable) {
+                apiBadge.textContent = selectedApi === 'webgpu' ? 'WebGPU Ready' : 'WebGL2 Selected';
+            } else {
+                apiBadge.textContent = 'WebGL2 Only';
+            }
+            apiBadge.className = 'api-badge ' + selectedApi;
+        }
+
+        function updateApiSelection(api) {
+            selectedApi = api;
+            const startWebgpuBtn = document.getElementById('startWebgpuBtn');
+            const startWebgl2Btn = document.getElementById('startWebgl2Btn');
+            const webgpuBtn = document.getElementById('webgpuBtn');
+            const webgl2Btn = document.getElementById('webgl2Btn');
+
+            // Start screen buttons
+            startWebgpuBtn.classList.remove('active', 'webgpu');
+            startWebgl2Btn.classList.remove('active', 'webgl2');
+            if (api === 'webgpu' && webgpuAvailable) {
+                startWebgpuBtn.classList.add('active', 'webgpu');
+            } else {
+                startWebgl2Btn.classList.add('active', 'webgl2');
+                selectedApi = 'webgl2';
+            }
+
+            // Top bar buttons
+            webgpuBtn.classList.remove('active', 'webgpu');
+            webgl2Btn.classList.remove('active', 'webgl2');
+            if (selectedApi === 'webgpu') {
+                webgpuBtn.classList.add('active', 'webgpu');
+            } else {
+                webgl2Btn.classList.add('active', 'webgl2');
+            }
+
+            // Update badge
+            apiBadge.textContent = selectedApi === 'webgpu' ? 'WebGPU Ready' : 'WebGL2 Selected';
+            apiBadge.className = 'api-badge ' + selectedApi;
+        }
+
+        // ============ INIT ============
+        async function init() {
             let hasWebGPU = false;
-            // Use WebGPU on Chrome (fast) or if explicitly requested, otherwise WebGL2
-            if (forceRenderer === 'webgpu' || (isChrome && forceRenderer !== 'webgl2')) {
+
+            // Initialize based on selected API
+            if (selectedApi === 'webgpu') {
                 hasWebGPU = await initWebGPU();
             }
 
@@ -1645,12 +1743,12 @@
             // Update API switcher state
             const webgpuBtn = document.getElementById('webgpuBtn');
             const webgl2Btn = document.getElementById('webgl2Btn');
+            webgpuBtn.classList.remove('active', 'webgpu');
+            webgl2Btn.classList.remove('active', 'webgl2');
             if (renderer === 'webgpu') {
                 webgpuBtn.classList.add('active', 'webgpu');
-                webgl2Btn.classList.remove('active', 'webgl2');
             } else {
                 webgl2Btn.classList.add('active', 'webgl2');
-                webgpuBtn.classList.remove('active', 'webgpu');
             }
 
             resize();
@@ -1658,8 +1756,19 @@
             render();
         }
 
-        // API Switcher handlers
+        // Start screen API selector handlers
+        document.getElementById('startWebgpuBtn').addEventListener('click', () => {
+            if (webgpuAvailable) {
+                updateApiSelection('webgpu');
+            }
+        });
+        document.getElementById('startWebgl2Btn').addEventListener('click', () => {
+            updateApiSelection('webgl2');
+        });
+
+        // Top bar API switcher handlers (reload with URL param)
         document.getElementById('webgpuBtn').addEventListener('click', () => {
+            if (!webgpuAvailable) return;
             const url = new URL(window.location);
             url.searchParams.set('renderer', 'webgpu');
             window.location.href = url.toString();
@@ -1670,7 +1779,8 @@
             window.location.href = url.toString();
         });
 
-        init();
+        // Detect APIs first, then wait for user to start
+        detectApis();
     </script>
 </body>
 </html>
