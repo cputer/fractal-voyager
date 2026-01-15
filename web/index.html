@@ -1557,6 +1557,7 @@
                     document.getElementById('muteBtn').classList.add('active');
                 } else {
                     audioElement.pause();
+                    state.audioIntensity = 0; // Stop audio reactivity immediately
                     document.getElementById('muteBtn').textContent = '🔇';
                     document.getElementById('muteBtn').classList.remove('active');
                 }
