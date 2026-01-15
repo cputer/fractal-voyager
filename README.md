@@ -14,9 +14,9 @@ A real-time, infinite fractal explorer written in [MindLang](https://mindlang.de
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                       Web Browser                        │
-│                                                          │
+┌─────────────────────────────────────────────────────────┐
+│                       Web Browser                       │
+│                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
 │  │   Controls   │  │    WebGPU    │  │  Web Audio   │   │
 │  │    Panel     │  │    Canvas    │  │   (FFT)      │   │
