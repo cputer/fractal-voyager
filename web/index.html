@@ -1807,7 +1807,8 @@
 
             resize();
             gpuReady = true;
-            render();
+            // Defer first render to next frame to avoid blocking
+            requestAnimationFrame(render);
         }
 
         // Start screen API selector handlers
