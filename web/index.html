@@ -1601,6 +1601,8 @@
             const btnText = document.querySelector('#startBtn .btn-text');
             if (btnText) btnText.textContent = 'Loading...';
             try {
+                // Initialize the renderer first
+                await init();
                 await loadDemoMusic();
                 if (state.audioSource === 'file') {
                     document.getElementById('startHint').style.display = 'none';
