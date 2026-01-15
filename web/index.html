@@ -127,6 +127,40 @@
             box-shadow: 0 4px 20px rgba(102,126,234,0.4);
         }
 
+        /* API Switcher */
+        .api-switcher {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: linear-gradient(135deg, #1a1a24 0%, #12121a 100%);
+        }
+        .api-switcher button {
+            padding: 6px 10px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .api-switcher button:hover {
+            color: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.05);
+        }
+        .api-switcher button.active {
+            color: #fff;
+        }
+        .api-switcher button.active.webgpu {
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+        }
+        .api-switcher button.active.webgl2 {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+        }
+
         #startHint {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             display: flex; align-items: center; justify-content: center;
@@ -441,6 +475,10 @@
     <div id="topBar" class="glass">
         <div id="info"></div>
         <div id="topRight">
+            <div class="api-switcher" id="apiSwitcher" title="Switch Rendering API">
+                <button id="webgpuBtn">WebGPU</button>
+                <button id="webgl2Btn">WebGL2</button>
+            </div>
             <button id="fractalBtn" class="btn mobile-only" title="Change Fractal">🌀</button>
             <button id="colorBtn" class="btn mobile-only" title="Change Color">🎨</button>
             <button id="muteBtn" class="btn active" title="Toggle Sound">🔊</button>
@@ -1604,10 +1642,33 @@
             apiBadge.textContent = renderer === 'webgpu' ? 'WebGPU Compute' : 'WebGL2 Fragment';
             apiBadge.className = 'api-badge ' + renderer;
 
+            // Update API switcher state
+            const webgpuBtn = document.getElementById('webgpuBtn');
+            const webgl2Btn = document.getElementById('webgl2Btn');
+            if (renderer === 'webgpu') {
+                webgpuBtn.classList.add('active', 'webgpu');
+                webgl2Btn.classList.remove('active', 'webgl2');
+            } else {
+                webgl2Btn.classList.add('active', 'webgl2');
+                webgpuBtn.classList.remove('active', 'webgpu');
+            }
+
             resize();
             gpuReady = true;
             render();
         }
+
+        // API Switcher handlers
+        document.getElementById('webgpuBtn').addEventListener('click', () => {
+            const url = new URL(window.location);
+            url.searchParams.set('renderer', 'webgpu');
+            window.location.href = url.toString();
+        });
+        document.getElementById('webgl2Btn').addEventListener('click', () => {
+            const url = new URL(window.location);
+            url.searchParams.set('renderer', 'webgl2');
+            window.location.href = url.toString();
+        });
 
         init();
     </script>
