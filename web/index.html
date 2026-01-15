@@ -460,8 +460,8 @@
                 min-width: 0;
                 text-align: left;
             }
-            #info .title { font-size: 12px; margin-bottom: 2px; white-space: nowrap; }
-            #info .api { padding: 2px 5px; font-size: 9px; margin-left: 3px; }
+            #info .title { font-size: 12px; margin-bottom: 2px; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+            #info .title .api { display: none !important; }
             #info .stats { font-size: 9px; white-space: normal; line-height: 1.4; }
             #topRight {
                 flex: 0 0 auto;
@@ -470,10 +470,11 @@
                 grid-template-rows: repeat(2, 28px);
                 gap: 4px;
             }
-            #apiSwitcher { display: none !important; }
+            #apiSwitcher { display: flex !important; position: absolute; top: 6px; left: 110px; }
             #resolution { display: none !important; }
             .btn { width: 28px; height: 28px; font-size: 12px; border-radius: 6px; }
             .btn.mobile-only { display: inline-flex; }
+            #topBar { position: relative; }
             #controls { display: none; }
             #startBtn { padding: 18px 36px; border-radius: 50px; }
             #startBtn .btn-text { font-size: 16px; }
