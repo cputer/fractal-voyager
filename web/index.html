@@ -1720,23 +1720,28 @@
         // ============ INIT ============
         async function init() {
             let hasWebGPU = false;
+            let hasWebGL2 = false;
 
-            // Initialize based on selected API
+            // Initialize based on selected API (default to webgl2 if not set)
             if (selectedApi === 'webgpu') {
                 hasWebGPU = await initWebGPU();
+                if (!hasWebGPU) {
+                    // Fallback to WebGL2
+                    hasWebGL2 = initWebGL2();
+                }
+            } else {
+                // Try WebGL2 first (default)
+                hasWebGL2 = initWebGL2();
+                if (!hasWebGL2) {
+                    // Fallback to WebGPU
+                    hasWebGPU = await initWebGPU();
+                }
             }
 
-            if (!hasWebGPU) {
-                const hasWebGL2 = initWebGL2();
-                if (!hasWebGL2) {
-                    // Fallback: try WebGPU if WebGL2 not available
-                    hasWebGPU = await initWebGPU();
-                    if (!hasWebGPU) {
-                        errorDiv.style.display = 'block';
-                        document.getElementById('startHint').style.display = 'none';
-                        return;
-                    }
-                }
+            if (!hasWebGPU && !hasWebGL2) {
+                errorDiv.style.display = 'block';
+                document.getElementById('startHint').style.display = 'none';
+                return;
             }
 
             apiBadge.textContent = renderer === 'webgpu' ? 'WebGPU Compute' : 'WebGL2 Fragment';
