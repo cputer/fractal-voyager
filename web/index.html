@@ -1612,33 +1612,36 @@
         }
 
         let demoStarted = false;
-        async function startDemo() {
+        function startDemo() {
             if (demoStarted) return;
             demoStarted = true;
             const btnText = document.querySelector('#startBtn .btn-text');
             if (btnText) btnText.textContent = 'Loading...';
-            try {
-                // Wait for API detection if not complete
-                if (typeof apiDetectionComplete !== 'undefined' && !apiDetectionComplete) {
-                    await new Promise(resolve => {
-                        const check = setInterval(() => {
-                            if (apiDetectionComplete) { clearInterval(check); resolve(); }
-                        }, 50);
-                    });
+            // Defer heavy work to avoid blocking click handler
+            requestAnimationFrame(async () => {
+                try {
+                    // Wait for API detection if not complete
+                    if (typeof apiDetectionComplete !== 'undefined' && !apiDetectionComplete) {
+                        await new Promise(resolve => {
+                            const check = setInterval(() => {
+                                if (apiDetectionComplete) { clearInterval(check); resolve(); }
+                            }, 50);
+                        });
+                    }
+                    console.log('Starting demo. selectedApi:', selectedApi, 'webgpuAvailable:', webgpuAvailable);
+                    // Initialize the renderer first
+                    await init();
+                    await loadDemoMusic();
+                    if (state.audioSource === 'file') {
+                        document.getElementById('startHint').style.display = 'none';
+                        toggleAutoZoom();
+                    } else { if (btnText) btnText.textContent = 'Click here to start'; demoStarted = false; }
+                } catch (e) {
+                    console.error('startDemo error:', e);
+                    if (btnText) btnText.textContent = 'Click here to start';
+                    demoStarted = false;
                 }
-                console.log('Starting demo. selectedApi:', selectedApi, 'webgpuAvailable:', webgpuAvailable);
-                // Initialize the renderer first
-                await init();
-                await loadDemoMusic();
-                if (state.audioSource === 'file') {
-                    document.getElementById('startHint').style.display = 'none';
-                    toggleAutoZoom();
-                } else { if (btnText) btnText.textContent = 'Click here to start'; demoStarted = false; }
-            } catch (e) {
-                console.error('startDemo error:', e);
-                if (btnText) btnText.textContent = 'Click here to start';
-                demoStarted = false;
-            }
+            });
         }
 
         // Only start on button click or spacebar
