@@ -465,11 +465,12 @@
             #info .stats { font-size: 9px; white-space: normal; line-height: 1.4; }
             #topRight {
                 flex: 0 0 auto;
-                display: flex;
-                align-items: center;
+                display: grid;
+                grid-template-columns: repeat(2, 28px);
+                grid-template-rows: repeat(2, 28px);
                 gap: 4px;
             }
-            #apiSwitcher { display: flex !important; order: -1; }
+            #apiSwitcher { display: none !important; }
             #resolution { display: none !important; }
             .btn { width: 28px; height: 28px; font-size: 12px; border-radius: 6px; }
             .btn.mobile-only { display: inline-flex; }
