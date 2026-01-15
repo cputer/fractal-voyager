@@ -763,7 +763,7 @@
 
                     // Iteration 1
                     if (zr2 + zi2 > ESCAPE_R_SQ) { break; }
-                    zi = fma(2.0 * zr, zi, ci);
+                    zi = 2.0 * zr * zi + ci;
                     zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi;
                     iter = iter + 1.0;
@@ -779,21 +779,21 @@
 
                     // Iteration 2
                     if (zr2 + zi2 > ESCAPE_R_SQ) { break; }
-                    zi = fma(2.0 * zr, zi, ci);
+                    zi = 2.0 * zr * zi + ci;
                     zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi;
                     iter = iter + 1.0;
 
                     // Iteration 3
                     if (zr2 + zi2 > ESCAPE_R_SQ) { break; }
-                    zi = fma(2.0 * zr, zi, ci);
+                    zi = 2.0 * zr * zi + ci;
                     zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi;
                     iter = iter + 1.0;
 
                     // Iteration 4
                     if (zr2 + zi2 > ESCAPE_R_SQ) { break; }
-                    zi = fma(2.0 * zr, zi, ci);
+                    zi = 2.0 * zr * zi + ci;
                     zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi;
                     iter = iter + 1.0;
@@ -804,7 +804,7 @@
                 for (var r: i32 = 0; r < 4; r = r + 1) {
                     if (r >= rem) { break; }
                     if (zr2 + zi2 > ESCAPE_R_SQ) { break; }
-                    zi = fma(2.0 * zr, zi, ci);
+                    zi = 2.0 * zr * zi + ci;
                     zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi;
                     iter = iter + 1.0;
@@ -860,22 +860,22 @@
                     var azr = abs(zr); var azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) { break; }
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter = iter + 1.0;
+                    zi = 2.0 * azr * azi + ci; iter = iter + 1.0;
 
                     azr = abs(zr); azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) { break; }
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter = iter + 1.0;
+                    zi = 2.0 * azr * azi + ci; iter = iter + 1.0;
 
                     azr = abs(zr); azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) { break; }
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter = iter + 1.0;
+                    zi = 2.0 * azr * azi + ci; iter = iter + 1.0;
 
                     azr = abs(zr); azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) { break; }
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter = iter + 1.0;
+                    zi = 2.0 * azr * azi + ci; iter = iter + 1.0;
                 }
 
                 return vec2<f32>(iter, sqrt(zr * zr + zi * zi));
@@ -1020,7 +1020,7 @@
 
                     // 4x unrolled with FMA
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
 
                     // Periodicity check
@@ -1028,15 +1028,15 @@
                     period++; if (period > 20) { ozr = zr; ozi = zi; period = 0; }
 
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
 
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
 
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
                 }
 
@@ -1044,7 +1044,7 @@
                 int rem = maxI - int(iter);
                 for (int r = 0; r < 4; r++) {
                     if (r >= rem || zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
                 }
 
@@ -1060,19 +1060,19 @@
                     if (i >= loopCount) break;
 
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
 
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
 
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
 
                     if (zr2 + zi2 > ESCAPE_R_SQ) break;
-                    zi = fma(2.0 * zr, zi, ci); zr = zr2 - zi2 + cr;
+                    zi = 2.0 * zr * zi + ci; zr = zr2 - zi2 + cr;
                     zr2 = zr * zr; zi2 = zi * zi; iter += 1.0;
                 }
                 return vec2(iter, sqrt(zr2 + zi2));
@@ -1089,22 +1089,22 @@
                     float azr = abs(zr), azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) break;
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter += 1.0;
+                    zi = 2.0 * azr * azi + ci; iter += 1.0;
 
                     azr = abs(zr); azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) break;
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter += 1.0;
+                    zi = 2.0 * azr * azi + ci; iter += 1.0;
 
                     azr = abs(zr); azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) break;
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter += 1.0;
+                    zi = 2.0 * azr * azi + ci; iter += 1.0;
 
                     azr = abs(zr); azi = abs(zi);
                     if (azr * azr + azi * azi > ESCAPE_R_SQ) break;
                     zr = azr * azr - azi * azi + cr;
-                    zi = fma(2.0 * azr, azi, ci); iter += 1.0;
+                    zi = 2.0 * azr * azi + ci; iter += 1.0;
                 }
                 return vec2(iter, sqrt(zr * zr + zi * zi));
             }
