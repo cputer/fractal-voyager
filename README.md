@@ -1,13 +1,13 @@
 # Fractal Voyager
 
-[![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen?style=for-the-badge)](https://cputer.github.io/fractal-voyager/)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen?style=for-the-badge)](https://mindlang.dev/demo/fractal/)
 [![WebGPU](https://img.shields.io/badge/WebGPU-Compute-blue?style=for-the-badge&logo=webgl)](https://gpuweb.github.io/gpuweb/)
 [![WebGL2](https://img.shields.io/badge/WebGL2-Fallback-orange?style=for-the-badge&logo=webgl)](https://www.khronos.org/webgl/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 Explore infinite mathematical complexity with GPU-accelerated fractal rendering. Dive into Mandelbrot, Julia, and Burning Ship fractals with buttery-smooth zoom and pan controls.
 
-**[Try the Live Demo →](https://cputer.github.io/fractal-voyager/)**
+**[Try the Live Demo →](https://mindlang.dev/demo/fractal/)**
 
 Built with [MindLang](https://mindlang.dev) and compiled to WebGPU compute shaders with automatic WebGL2 fallback for broader compatibility.
 
