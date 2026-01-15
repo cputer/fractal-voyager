@@ -1257,26 +1257,38 @@
 
         // ============ WebGL2 INIT ============
         function initWebGL2() {
-            gl = canvas.getContext('webgl2');
-            if (!gl) return false;
-
-            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-            gpuName = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'WebGL2 Device';
-
-            function createShader(type, source) {
-                const shader = gl.createShader(type);
-                gl.shaderSource(shader, source);
-                gl.compileShader(shader);
-                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                    console.error(gl.getShaderInfoLog(shader));
-                    return null;
+            try {
+                console.log('initWebGL2: attempting canvas.getContext("webgl2")');
+                gl = canvas.getContext('webgl2');
+                console.log('initWebGL2: gl =', gl);
+                if (!gl) {
+                    console.error('initWebGL2: Failed to get WebGL2 context');
+                    return false;
                 }
-                return shader;
-            }
 
-            const vs = createShader(gl.VERTEX_SHADER, glslVS);
-            const fs = createShader(gl.FRAGMENT_SHADER, glslFS);
-            if (!vs || !fs) return false;
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                gpuName = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'WebGL2 Device';
+                console.log('initWebGL2: GPU =', gpuName);
+
+                function createShader(type, source) {
+                    const shader = gl.createShader(type);
+                    gl.shaderSource(shader, source);
+                    gl.compileShader(shader);
+                    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                        console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+                        return null;
+                    }
+                    return shader;
+                }
+
+                console.log('initWebGL2: Creating shaders...');
+                const vs = createShader(gl.VERTEX_SHADER, glslVS);
+                const fs = createShader(gl.FRAGMENT_SHADER, glslFS);
+                console.log('initWebGL2: vs =', !!vs, 'fs =', !!fs);
+                if (!vs || !fs) {
+                    console.error('initWebGL2: Shader creation failed');
+                    return false;
+                }
 
             glProgram = gl.createProgram();
             gl.attachShader(glProgram, vs);
@@ -1297,8 +1309,13 @@
                 glUniforms[n] = gl.getUniformLocation(glProgram, 'u_' + n);
             });
 
-            renderer = 'webgl2';
-            return true;
+                console.log('initWebGL2: Success!');
+                renderer = 'webgl2';
+                return true;
+            } catch (e) {
+                console.error('initWebGL2 exception:', e);
+                return false;
+            }
         }
 
         // ============ RESIZE ============
@@ -1601,6 +1618,15 @@
             const btnText = document.querySelector('#startBtn .btn-text');
             if (btnText) btnText.textContent = 'Loading...';
             try {
+                // Wait for API detection if not complete
+                if (typeof apiDetectionComplete !== 'undefined' && !apiDetectionComplete) {
+                    await new Promise(resolve => {
+                        const check = setInterval(() => {
+                            if (apiDetectionComplete) { clearInterval(check); resolve(); }
+                        }, 50);
+                    });
+                }
+                console.log('Starting demo. selectedApi:', selectedApi, 'webgpuAvailable:', webgpuAvailable);
                 // Initialize the renderer first
                 await init();
                 await loadDemoMusic();
@@ -1608,7 +1634,11 @@
                     document.getElementById('startHint').style.display = 'none';
                     toggleAutoZoom();
                 } else { if (btnText) btnText.textContent = 'Click here to start'; demoStarted = false; }
-            } catch (e) { if (btnText) btnText.textContent = 'Click here to start'; demoStarted = false; }
+            } catch (e) {
+                console.error('startDemo error:', e);
+                if (btnText) btnText.textContent = 'Click here to start';
+                demoStarted = false;
+            }
         }
 
         // Only start on button click or spacebar
@@ -1722,23 +1752,36 @@
             let hasWebGPU = false;
             let hasWebGL2 = false;
 
+            console.log('init() called. selectedApi:', selectedApi);
+
             // Initialize based on selected API (default to webgl2 if not set)
             if (selectedApi === 'webgpu') {
+                console.log('Trying WebGPU first...');
                 hasWebGPU = await initWebGPU();
+                console.log('WebGPU result:', hasWebGPU);
                 if (!hasWebGPU) {
                     // Fallback to WebGL2
+                    console.log('WebGPU failed, falling back to WebGL2...');
                     hasWebGL2 = initWebGL2();
+                    console.log('WebGL2 result:', hasWebGL2);
                 }
             } else {
                 // Try WebGL2 first (default)
+                console.log('Trying WebGL2 first...');
                 hasWebGL2 = initWebGL2();
+                console.log('WebGL2 result:', hasWebGL2);
                 if (!hasWebGL2) {
                     // Fallback to WebGPU
+                    console.log('WebGL2 failed, falling back to WebGPU...');
                     hasWebGPU = await initWebGPU();
+                    console.log('WebGPU result:', hasWebGPU);
                 }
             }
 
             if (!hasWebGPU && !hasWebGL2) {
+                console.error('Both WebGPU and WebGL2 failed to initialize!');
+                console.error('navigator.gpu:', !!navigator.gpu);
+                console.error('canvas.getContext("webgl2"):', !!canvas.getContext('webgl2'));
                 errorDiv.style.display = 'block';
                 document.getElementById('startHint').style.display = 'none';
                 return;
@@ -1787,7 +1830,12 @@
         });
 
         // Detect APIs first, then wait for user to start
-        detectApis();
+        let apiDetectionComplete = false;
+        (async () => {
+            await detectApis();
+            apiDetectionComplete = true;
+            console.log('API Detection complete. WebGPU:', webgpuAvailable, 'Selected:', selectedApi);
+        })();
     </script>
 </body>
 </html>
