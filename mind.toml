@@ -12,7 +12,7 @@ version = "0.1.0"
 authors = ["STARGA Inc. <noreply@star.ga>"]
 license = "MIT"
 description = "GPU-accelerated fractal explorer with audio-reactive visualization"
-repository = "https://github.com/cputer/fractal-voyager"
+repository = "https://github.com/star-ga/fractal-voyager"
 keywords = ["fractal", "mandelbrot", "webgpu", "visualization", "mind", "tensor"]
 edition = "2025"
 
